@@ -88,6 +88,8 @@ func createSound(Name string, Weight int, PartDelay int) *Sound {
 }
 
 func (sc *SoundCollection) Load() {
+	log.Info(fmt.Sprintf("– %v", sc.Prefix))
+
 	for _, sound := range sc.Sounds {
 		sc.soundRange += sound.Weight
 		sound.Load(sc)
@@ -116,6 +118,8 @@ func (s *SoundCollection) Random() *Sound {
 // https://github.com/nstafie/dca-rs
 // eg: dca-rs --raw -i <input wav file> > <output file>
 func (s *Sound) Load(c *SoundCollection) error {
+	log.Info(fmt.Sprintf("	%v", s.Name))
+
 	path := fmt.Sprintf("audio/%v/%v.dca", c.Prefix, s.Name)
 
 	file, err := os.Open(path)
