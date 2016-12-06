@@ -144,11 +144,11 @@ gulp.task('dist', ['build'], () => {
         css: index[1],
         ogimage: {
           src: fbImage[0],
-          tpl: '<meta property="og:image" content="https://airhorn.solutions/%s" />'
+          tpl: '<meta property="og:image" content="%s" />'
         },
         twitterimage: {
           src: twitterImage[0],
-          tpl: '<meta name="twitter:image" content="https://airhorn.solutions/%s" />'
+          tpl: '<meta name="twitter:image" content="%s" />'
         },
         favicon: {
           src: favicon[0],
