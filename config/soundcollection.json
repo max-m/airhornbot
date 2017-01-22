@@ -1,0 +1,91 @@
+{ "airhorn": { "Prefix":   "airhorn"
+             , "Commands": [ "!airhorn" ]
+             , "Sounds":   { "default":       [ 1000, 250 ]
+                           , "reverb":        [  800, 250 ]
+                           , "spam":          [  800,   0 ]
+                           , "tripletap":     [  800, 250 ]
+                           , "fourtap":       [  800, 250 ]
+                           , "distant":       [  500, 250 ]
+                           , "echo":          [  500, 250 ]
+                           , "clownfull":     [  250, 250 ]
+                           , "clownshort":    [  250, 250 ]
+                           , "clownspam":     [  250,   0 ]
+                           , "highfartlong":  [  200, 250 ]
+                           , "highfartshort": [  200, 250 ]
+                           , "midshort":      [  100, 250 ]
+                           , "truck":         [   10, 250 ]
+                           }
+        }
+
+, "khaled": { "Prefix":    "another"
+            , "chainWith": "airhorn"
+            , "Commands":  [ "!anotha"
+                           , "!anothaone"
+                           ]
+            , "Sounds":    { "one":         [ 1, 250 ]
+                           , "one_classic": [ 1, 250 ]
+                           , "one_echo":    [ 1, 250 ]
+                           }
+            }
+
+, "cena": { "Prefix":   "jc"
+          , "Commands": [ "!johncena"
+                        , "!cena"
+                        ]
+          , "Sounds":   { "airhorn": [ 1, 250 ]
+                        , "echo":    [ 1, 250 ]
+                        , "full":    [ 1, 250 ]
+                        , "jc":      [ 1, 250 ]
+                        , "nameis":  [ 1, 250 ]
+                        , "spam":    [ 1, 250 ]
+                        }
+          }
+
+, "ethan": { "Prefix":   "ethan"
+           , "Commands": [ "!ethan"
+                         , "!eb"
+                         , "!ethanbradberry"
+                         , "!h3h3"
+                         ]
+           , "Sounds":   { "areyou_classic":   [ 100, 250 ]
+                         , "areyou_condensed": [ 100, 250 ]
+                         , "areyou_crazy":     [ 100, 250 ]
+                         , "areyou_ethan":     [ 100, 250 ]
+                         , "classic":          [ 100, 250 ]
+                         , "echo":             [ 100, 250 ]
+                         , "high":             [ 100, 250 ]
+                         , "slowandlow":       [ 100, 250 ]
+                         , "cuts":             [  30, 250 ]
+                         , "beat":             [  30, 250 ]
+                         , "sodiepop":         [   1, 250 ]
+                         }
+          }
+
+, "cow": { "Prefix":   "cow"
+         , "Commands": [ "!stan"
+                       , "!stanislav"
+                       ]
+         , "Sounds":   { "herd": [ 10, 250 ]
+                       , "moo":  [ 10, 250 ]
+                       , "x3":   [  1, 250 ]
+                       }
+         }
+
+, "birthday": { "Prefix":   "birthday"
+              , "Commands": [ "!birthday"
+                            , "!bday"
+                            ]
+              , "Sounds":   { "horn":     [ 50, 250 ]
+                            , "horn3":    [ 30, 250 ]
+                            , "sadhorn":  [ 25, 250 ]
+                            , "weakhorn": [ 25, 250 ]
+                            }
+        }
+
+, "wow": { "Prefix":   "wow"
+         , "Commands": [ "!wowthatscool"
+                       , "!wtc"
+                       ]
+         , "Sounds":   { "thatscool": [ 50, 250 ] }
+         }
+}

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"encoding/json"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/bwmarrin/discordgo"
@@ -37,6 +40,8 @@ var (
 
 	// Owner
 	OWNER string
+
+	COLLECTIONS Collections
 )
 
 // Play represents an individual use of the !airhorn command
@@ -56,8 +61,8 @@ type Play struct {
 type SoundCollection struct {
 	Prefix    string
 	Commands  []string
-	Sounds    []*Sound
-	ChainWith *SoundCollection
+	Sounds    *Sounds
+	ChainWith string // *SoundCollection
 
 	soundRange int
 }
@@ -76,6 +81,32 @@ type Sound struct {
 	buffer [][]byte
 }
 
+type Sounds map[string]*Sound
+
+func (s *Sounds) UnmarshalJSON(b []byte) (err error) {
+	var m map[string]*json.RawMessage
+
+	err = json.Unmarshal(b, &m)
+
+	if err != nil {
+		return err
+	}
+
+	(*s) = make(map[string]*Sound, len(m))
+
+	for k, v := range m {
+		var tmp []int
+		err = json.Unmarshal(*v, &tmp)
+
+		if err != nil {
+			return err
+		}
+
+		(*s)[k] = createSound(k, tmp[0], tmp[1])
+	}
+
+	return nil
+}
 
 // Create a Sound struct
 func createSound(Name string, Weight int, PartDelay int) *Sound {
@@ -87,10 +118,12 @@ func createSound(Name string, Weight int, PartDelay int) *Sound {
 	}
 }
 
+type Collections map[string]*SoundCollection
+
 func (sc *SoundCollection) Load() {
 	log.Info(fmt.Sprintf("– %v", sc.Prefix))
 
-	for _, sound := range sc.Sounds {
+	for _, sound := range *sc.Sounds {
 		sc.soundRange += sound.Weight
 		sound.Load(sc)
 	}
@@ -102,7 +135,7 @@ func (s *SoundCollection) Random() *Sound {
 		number int = randomRange(0, s.soundRange)
 	)
 
-	for _, sound := range s.Sounds {
+	for _, sound := range *s.Sounds {
 		i += sound.Weight
 
 		if number < i {
@@ -215,12 +248,12 @@ func createPlay(user *discordgo.User, guild *discordgo.Guild, coll *SoundCollect
 	}
 
 	// If the collection is a chained one, set the next sound
-	if coll.ChainWith != nil {
+	if coll.ChainWith != "" {
 		play.Next = &Play{
 			GuildID:   play.GuildID,
 			ChannelID: play.ChannelID,
 			UserID:    play.UserID,
-			Sound:     coll.ChainWith.Random(),
+			Sound:     COLLECTIONS[coll.ChainWith].Random(),
 			Forced:    play.Forced,
 		}
 	}
@@ -392,6 +425,7 @@ func displayBotStats(cid string) {
 	fmt.Fprintf(w, "Users: \t%d\n", users)
 	fmt.Fprintf(w, "```\n")
 	w.Flush()
+
 	discord.ChannelMessageSend(cid, buf.String())
 }
 
@@ -452,14 +486,14 @@ func airhornBomb(cid string, guild *discordgo.Guild, user *discordgo.User, cs st
 		return
 	}
 
-	play := createPlay(user, guild, AIRHORN, nil)
+	play := createPlay(user, guild, COLLECTIONS["airhorn"], nil)
 	vc, err := discord.ChannelVoiceJoin(play.GuildID, play.ChannelID, true, true)
 	if err != nil {
 		return
 	}
 
 	for i := 0; i < count; i++ {
-		AIRHORN.Random().Play(vc)
+		COLLECTIONS["airhorn"].Random().Play(vc)
 	}
 
 	vc.Disconnect()
@@ -468,6 +502,9 @@ func airhornBomb(cid string, guild *discordgo.Guild, user *discordgo.User, cs st
 // Handles bot operator messages, should be refactored (lmao)
 func handleBotControlMessages(s *discordgo.Session, m *discordgo.MessageCreate, parts []string, g *discordgo.Guild) {
 	if scontains(parts[1], "status") {
+		displayBotStats(m.ChannelID)
+	} else if scontains(parts[1], "reload") {
+		loadSounds()
 		displayBotStats(m.ChannelID)
 	} else if scontains(parts[1], "stats") {
 		if len(m.Mentions) >= 2 {
@@ -535,7 +572,7 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			// If they passed a specific sound effect, find and select that (otherwise play nothing)
 			var sound *Sound
 			if len(parts) > 1 {
-				for _, s := range coll.Sounds {
+				for _, s := range *coll.Sounds {
 					if parts[1] == s.Name {
 						sound = s
 					}
@@ -549,6 +586,30 @@ func onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			go enqueuePlay(m.Author, guild, coll, sound)
 			return
 		}
+	}
+}
+
+func loadSounds() {
+	COLLECTIONS = nil
+
+	log.Info("Reading config/soundcollection.json")
+	jsonBuffer, err := ioutil.ReadFile("config/soundcollection.json")
+
+	err = json.Unmarshal(jsonBuffer, &COLLECTIONS)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Preload all the sounds
+	log.Info("Preloading sounds...")
+	for name, coll := range COLLECTIONS {
+		if coll.ChainWith != "" && COLLECTIONS[coll.ChainWith] == nil {
+			log.Warn("Collection references unknown collection to chain with: ", name, " chains ", coll.ChainWith)
+			coll.ChainWith = ""
+		}
+
+		coll.Load()
 	}
 }
 
@@ -567,11 +628,7 @@ func main() {
 		OWNER = *Owner
 	}
 
-	// Preload all the sounds
-	log.Info("Preloading sounds...")
-	for _, coll := range COLLECTIONS {
-		coll.Load()
-	}
+	loadSounds()
 
 	// If we got passed a redis server, try to connect
 	if *Redis != "" {
