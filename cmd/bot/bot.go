@@ -24,6 +24,8 @@ import (
 	redis "gopkg.in/redis.v3"
 )
 
+var StartTime = time.Now()
+
 var (
 	// discordgo session
 	discord *discordgo.Session
@@ -406,7 +408,7 @@ func calculateAirhornsPerSecond(cid string) {
 func displayBotStats(cid string) {
 	stats := runtime.MemStats{}
 	runtime.ReadMemStats(&stats)
-
+	
 	users := 0
 	for _, guild := range discord.State.Ready.Guilds {
 		users += len(guild.Members)
@@ -423,6 +425,7 @@ func displayBotStats(cid string) {
 	fmt.Fprintf(w, "Tasks: \t%d\n", runtime.NumGoroutine())
 	fmt.Fprintf(w, "Servers: \t%d\n", len(discord.State.Ready.Guilds))
 	fmt.Fprintf(w, "Users: \t%d\n", users)
+	fmt.Fprintf(w, "Runtime: \t%s\n", time.Since(StartTime))
 	fmt.Fprintf(w, "```\n")
 	w.Flush()
 
@@ -614,6 +617,8 @@ func loadSounds() {
 }
 
 func main() {
+	StartTime = time.Now()
+
 	var (
 		Token      = flag.String("t", "", "Discord Authentication Token")
 		Redis      = flag.String("r", "", "Redis Connection String")
@@ -675,7 +680,7 @@ func main() {
 	}
 
 	// We're running!
-	log.Info("AIRHORNBOT is ready to horn it up.")
+	log.Info("AIRHORNBOT is ready to horn it up, startup time: ", time.Since(StartTime))
 
 	// Wait for a signal to quit
 	c := make(chan os.Signal, 1)
