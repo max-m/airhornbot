@@ -380,12 +380,7 @@ func onGuildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
 		return
 	}
 
-	for _, channel := range event.Guild.Channels {
-		if channel.ID == event.Guild.ID {
-			s.ChannelMessageSend(channel.ID, "**AIRHORN BOT READY FOR HORNING. TYPE `!AIRHORN` WHILE IN A VOICE CHANNEL TO ACTIVATE**")
-			return
-		}
-	}
+	log.Info("onGuildCreate: ", event.Guild.Name)
 }
 
 func scontains(key string, options ...string) bool {
@@ -408,7 +403,7 @@ func calculateAirhornsPerSecond(cid string) {
 func displayBotStats(cid string) {
 	stats := runtime.MemStats{}
 	runtime.ReadMemStats(&stats)
-	
+
 	users := 0
 	for _, guild := range discord.State.Ready.Guilds {
 		users += len(guild.Members)
